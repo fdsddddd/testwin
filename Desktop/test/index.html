@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="https://cdn.bootcss.com/zepto/1.0rc1/zepto.min.js"></script>
+    <meta name="viewport" content="initial-scale=1" />
+    <style media="screen">
+      .start {
+        border: 1px solid;
+        padding: 7px 5px;
+      }
+      .choose {
+        width: 100px;
+        margin-left: 50px;
+        border: 1px solid;
+        height: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div hidden>
+      充值：<span id="add">0</span>
+    </div>
+    <div>
+      剩余：<span id="win">0</span>
+    </div>
+    <div>
+      盈利：<span id="lost">0</span>
+    </div>
+    <div id="start">
+      <input class="start" />
+      <button id="startBtn">充值</button>
+    </div>
+    <div style="margin-top: 40px;">
+      <button class="choose" data-type="1">大</button>
+      <button class="choose" data-type="0">小</button>
+    </div>
+    <script type="text/javascript">
+      var add = localStorage.getItem('add') || 0
+      var win = localStorage.getItem('win') || 0
+      var lost = localStorage.getItem('lost') || 0
+      $('#win').html(win)
+      $('#lost').html(lost)
+      $('#add').html(add)
+      $(function() {
+        var start
+        $('#startBtn').click(function() {
+          start = +$('.start').val()
+          var now = +(localStorage.getItem('win') || 0)
+          var r = now + start
+          localStorage.setItem('win', r)
+          $('#win').html(r)
+          $('.start').val('')
+
+          var _add = +(localStorage.getItem('add') || 0) + start
+          $('#add').html(_add)
+          localStorage.setItem('add', _add)
+        })
+
+        function getNum() {
+          var r = Math.random() + ""
+          var r1 = +r.substring(3,4);
+          var r2 = +r.substring(6,7);
+          var r3 = +r.substring(9,10);
+          return r1 + r2 + r3
+        }
+
+        $('.choose').click(function() {
+          var result = window.prompt()
+          result = +result
+          var num = getNum()
+          if (this.dataset.type === '1') {
+            if (num > 13) {
+              result = +result
+            } else {
+              result = -result
+            }
+            var win = +(localStorage.getItem('win') || 0)
+            win = win + result
+            localStorage.setItem('win', win)
+            $('#win').html(win)
+
+            var ying = win - (+(localStorage.getItem('add') || 0))
+            $('#lost').html(ying)
+            localStorage.setItem('lost', ying)
+          } else {
+            if (num < 14) {
+              result = +result
+            } else {
+              result = -result
+            }
+            var win = +(localStorage.getItem('win') || 0)
+            win = win + result
+            localStorage.setItem('win', win)
+            $('#win').html(win)
+
+            var ying = win - (+(localStorage.getItem('add') || 0))
+            $('#lost').html(ying)
+            localStorage.setItem('lost', ying)
+          }
+        })
+      })
+    </script>
+  </body>
+</html>
