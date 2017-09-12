@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="https://cdn.bootcss.com/zepto/1.0rc1/zepto.min.js"></script>
+    <link href="https://cdn.bootcss.com/meyer-reset/2.0/reset.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title></title>
+    <style type="text/css">
+    .header {display: flex;height: 70px;}
+
+    .header-item {
+      border-bottom: 1px solid #ccc;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      padding-top: 10px;
+      line-height: 24px;
+    }
+    .header-item:nth-child(2) {
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+    }
+
+    .button {
+      margin-top: 32px;
+      text-align: center;
+    }
+    .red {
+      color: red;
+    }
+    .green {
+      color: green;
+    }
+
+    .input {
+      border: 1px solid #ccc;
+      padding: 7px 5px;
+      margin: 0 auto;
+      width: 180px;
+      display: block;
+      margin-top: 24px;
+      border-radius: 4px;
+    }
+    .button button {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 80px;
+      height: 80px;
+      margin: 0 20px;
+    }
+
+    .list {font-size: 12px;margin-top: 32px;padding: 0 16px;}
+
+    .list li {padding: 8px 0;border-bottom: 1px solid #ccc;list-style: none;}
+
+    </style>
+  </head>
+  <script type="text/javascript">
+  var db = {
+    get: function(k) {
+      return JSON.parse(localStorage.getItem(k))
+    },
+    set: function(k, v) {
+      return localStorage.setItem(k, JSON.stringify(v))
+    }
+  }
+
+  Date.prototype.Format = function (fmt) {
+      var o = {
+          "M+": this.getMonth() + 1,
+          "d+": this.getDate(),
+          "h+": this.getHours(),
+          "m+": this.getMinutes(),
+          "s+": this.getSeconds(),
+          "q+": Math.floor((this.getMonth() + 3) / 3),
+          "S": this.getMilliseconds()
+      };
+      if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+      for (var k in o)
+      if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+      return fmt;
+  }
+
+  function makeList(list) {
+    var tpl = ''
+    list.forEach(function(item) {
+      var cls = item.w < 0 ? 'green' : 'red'
+      tpl += [
+        '<li>',
+          '结果：<span>'+ item.r +'</span>',
+          '&emsp;',
+          '投注：<span>'+ item.d +'</span>',
+          '&emsp;',
+          '盈利：<span class="'+ cls +'">'+ item.w +'</span>',
+          '&emsp;',
+          '时间：<span>'+ new Date(item.t).Format("yyyy-MM-dd hh:mm:ss") +'</span>',
+        '</li>',
+      ].join('')
+    })
+    return tpl
+  }
+
+  if (!db.get('initial')) {
+    db.set('initial', 1)
+    db.set('list', [])
+    db.set('cz', 0)
+    db.set('sy', 0)
+    db.set('yl', 0)
+    db.set('sl', 0)
+    db.set('z', 0)
+    db.set('s', 0)
+    db.set('t', 0)
+  }
+  var __list = db.get('list')
+  var __cz = db.get('cz')
+  var __sy = db.get('sy')
+  var __yl = db.get('yl')
+  var __sl = db.get('sl')
+  var __s = db.get('s')
+  var __t = db.get('t')
+
+  function sy(s) {$("#sy").html(s)}
+  function yl(s) {$("#yl").html(s); if (s < 0) {$("#yl").removeClass().addClass('green')} else if (s > 0) {$("#yl").removeClass().addClass('red')}}
+  function sl(s) {$("#sl").html(parseInt(s) + '%')}
+  function getResult() {
+    var r = Math.random() + ""
+    var r1 = +r.substring(3,4);
+    var r2 = +r.substring(6,7);
+    var r3 = +r.substring(9,10);
+    return r1 + r2 + r3
+  }
+
+  function event() {
+    $('#cz').click(function() {
+      var result = +window.prompt()
+      __sy += result
+      db.set('sy', __sy)
+      sy(__sy)
+
+      __cz += result
+      db.set('cz', __cz)
+    })
+
+    $('#da').click(function() {
+      var result = +window.prompt()
+      if (!result) {return}
+      var num = getResult()
+      __t += 1
+      var object = {}
+      if (num > 13) {
+        __sy += result
+        object = {
+          r: '大',
+          d: '大',
+          w: result,
+          t: +new Date
+        }
+      } else {
+        __sy -= result
+        __s += 1
+        object = {
+          r: '小',
+          d: '大',
+          w: -result,
+          t: +new Date
+        }
+      }
+      db.set('t', __t)
+      db.set('s', __s)
+      db.set('sy', __sy)
+      __list.unshift(object)
+      db.set('list', __list)
+      var html = makeList([object])
+      var ohtml = $("#list").html()
+      html += ohtml
+      $("#list").html(html)
+      var aaa = (((__t - __s) / __t) * 100) || 0
+      sy(__sy)
+      yl(__sy - __cz)
+      sl(aaa)
+      db.set('yl', __sy - __cz)
+    })
+
+    $('#xiao').click(function() {
+      var result = +window.prompt()
+      if (!result) {return}
+      var num = getResult()
+      __t += 1
+      var object = {}
+      if (num < 14) {
+        __sy += result
+        object = {
+          r: '小',
+          d: '小',
+          w: result,
+          t: +new Date
+        }
+      } else {
+        __sy -= result
+        __s += 1
+        object = {
+          r: '小',
+          d: '大',
+          w: -result,
+          t: +new Date
+        }
+      }
+      db.set('t', __t)
+      db.set('s', __s)
+      db.set('sy', __sy)
+      __list.unshift(object)
+      db.set('list', __list)
+      var html = makeList([object])
+      var ohtml = $("#list").html()
+      html += ohtml
+      $("#list").html(html)
+      var aaa = (((__t - __s) / __t) * 100) || 0
+      sy(__sy)
+      yl(__sy - __cz)
+      sl(aaa)
+      db.set('yl', __sy - __cz)
+    })
+  }
+
+  $(function() {
+    sy(db.get('sy'))
+    yl(db.get('yl'))
+    var aaa = (((__t - __s) / __t) * 100) || 0
+    sl(aaa)
+    var list = db.get('list')
+    var html = makeList(list)
+    $("#list").html(html)
+    event()
+  })
+
+  </script>
+  <body>
+    <div class="header">
+      <div class="header-item">
+        <p class="header-item-title">剩余</p>
+        <p class="header-item-text" id="sy">123</p>
+      </div>
+      <div class="header-item">
+        <p class="header-item-title">盈利</p>
+        <p class="header-item-text" id="yl">123</p>
+      </div>
+      <div class="header-item">
+        <p class="header-item-title">胜率</p>
+        <p class="header-item-text" id="sl">123</p>
+      </div>
+    </div>
+    <div class="button">
+      <Button class="button-1" id="cz">充值</Button>
+      <Button class="button-1" id="da">大</Button>
+      <Button class="button-2" id="xiao">小</Button>
+    </div>
+    <div class="list">
+      <ul id="list"></ul>
+    </div>
+  </body>
+</html>
